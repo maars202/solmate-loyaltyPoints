@@ -61,7 +61,7 @@ import { SolanaPointSystem } from "../target/types/solana_point_system";
 import { assert } from "chai";
 import { BN } from "bn.js";
 
-describe("mysolanaapp", () => {
+describe.skip("mysolanaapp", () => {
     // Configure the client to use the local cluster.
     const provider = anchor.AnchorProvider.env();
     anchor.setProvider(provider);
@@ -228,33 +228,10 @@ describe("mysolanaapp", () => {
     console.log("base account pubkey ", escrowInfoAccount.toBase58())
     console.log("nftMint: ", nftMint.toBase58())
     console.log("SystemProgram.programId: ", SystemProgram.programId.toBase58())
-
-  //   #[account(
-  //     mut,
-  //     constraint = seller_token.amount == 1,
-  //     constraint = seller_token.owner == seller.to_account_info().key()
-  // )]
-  //   pub seller_token: Account<'info, TokenAccount>,
-    
-  //   #[account(
-  //       init,
-  //       payer = seller,
-  //       space = 8 + LISTING_PROOF_LEN, 
-  //       seeds = [seller.key().as_ref(), mintAddress.key().as_ref(), b"points"],
-  //       bump,
-  //   )]
-  //   pub base_account: Account<'info, BaseAccount>,
-  //   #[account(mut)]
-  //   pub seller: Signer<'info>,
-  //   pub mintAddress: Account<'info, Mint>,
-  //   pub system_program: Program <'info, System>,
-
-
-    await program.rpc.create("10", {
+    await program.rpc.create({
       accounts: {
-        sellerToken: sellerTokenAccount,
         baseAccount: escrowInfoAccount,
-        seller: seller.publicKey,
+        owner: seller.publicKey,
         mintAddress: nftMint,
         systemProgram: SystemProgram.programId,
       },
@@ -292,8 +269,6 @@ describe("mysolanaapp", () => {
 
   it("increment count", async () => {
 
-
-
     let [_escrowInfoAccount, _escrowInfoAccountBump] =
     await PublicKey.findProgramAddress(
         [seller.publicKey.toBytes(), nftMint.toBytes(), Buffer.from(anchor.utils.bytes.utf8.encode("points"))],
@@ -327,49 +302,9 @@ describe("mysolanaapp", () => {
     let accountAfter = await program.account.baseAccount.fetch(_escrowInfoAccount);
     console.log("After incrementing: ", accountAfter)
 
-
   })
 
 
-  it("increment tier after it hits evolutionLevel", async () => {
-
-    let [_escrowInfoAccount, _escrowInfoAccountBump] =
-    await PublicKey.findProgramAddress(
-        [seller.publicKey.toBytes(), nftMint.toBytes(), Buffer.from(anchor.utils.bytes.utf8.encode("points"))],
-        // need programid since the program is the one that is "init" this account! and it uses its own programid to derive/find the suitable address!
-        program.programId
-      );
-
-            // sleeper function for the airdrop to properly settle into account which takes some time 
-      // so that following createMint function doesnt encounter errors:
-      function delay(ms: number) {
-        return new Promise( resolve => setTimeout(resolve, ms) );
-    }
-
-    await delay(1000);
-
-    let accountInitial = await program.account.baseAccount.fetch(_escrowInfoAccount);
-
-
-    console.log("Before incrementing: ", accountInitial)
-
-    console.log("seller public key: ", seller.publicKey.toBase58());
-
-    for (var i=0;i<10;i++){
-    await program.rpc.increment({
-      accounts: {
-        baseAccount: _escrowInfoAccount,
-        owner: seller.publicKey,
-        systemProgram: SystemProgram.programId,
-      },
-      signers: [seller],
-    });
-}
-
-    let accountAfter = await program.account.baseAccount.fetch(_escrowInfoAccount);
-    console.log("After incrementing: ", accountAfter)
-
-  })
   
 
   it.skip("gets all spl token accounts of user", async () => {
